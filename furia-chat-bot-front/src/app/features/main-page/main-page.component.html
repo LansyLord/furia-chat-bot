@@ -1,0 +1,23 @@
+<div class="container">
+    <div class="cards">
+        <div class="card-header">
+            <h2>Furia Chat-Bot</h2>
+        </div>
+        <div #cardBody class="card-body">
+            <!-- Mensagens dinâmicas -->
+            <div *ngFor="let msg of messages" class="chat" [class.chat-bot]="msg.isBot" [class.user]="!msg.isBot">
+                <span class="user-icon">
+                    <i class="fa" [class.fa-robot]="msg.isBot" [class.fa-user]="!msg.isBot"></i>
+                </span>
+                <p>{{msg.text}}</p>
+            </div>
+        </div>
+        <div class="card-footer">
+            <textarea #inputChat name="message" class="input-chat" cols="10" rows="1"
+                placeholder="Escolha uma das opções" (keyup.enter)="manageChat()"></textarea>
+            <div class="sending-icon" (click)="manageChat()">
+                <i class="fa-regular fa-paper-plane"></i>
+            </div>
+        </div>
+    </div>
+</div>
