@@ -26,9 +26,9 @@ public class ChatService {
 
         if (comando.contains("1")) {
             // Retorna a lista de partidas como objeto JSON
-            return new MensagemResponse<>(matchMapper.toMatchDTOList(pandaScoreClient.buscarUltimos3Jogos()));
+            return new MensagemResponse<>(matchMapper.toMatchDTOList(pandaScoreClient.buscarProximosJogos()));
         } else if (comando.contains("2")) {
-            return new MensagemResponse<>(pandaScoreClient.buscarProximosJogos());
+            return new MensagemResponse<>(matchMapper.toMatchDTOList(pandaScoreClient.buscarUltimos3Jogos()));
         } else if (comando.contains("3")) {
             return new MensagemResponse<>(pandaScoreClient.buscarPerfilJogadores());
         } else if (comando.contains("4")) {
