@@ -2,10 +2,10 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Partida } from '../models/partida';
+import { Match } from '../models/match';
 
 interface ApiResponse {
-  resposta: Partida[]; // Usando o nome correto da propriedade
+  resposta: Match[]; // Usando o nome correto da propriedade
 }
 
 @Injectable({

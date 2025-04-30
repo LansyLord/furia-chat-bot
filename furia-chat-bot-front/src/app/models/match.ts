@@ -1,4 +1,4 @@
-export interface Partida {
+export interface Match {
     leagueName: string;
     seriesName: string;
     matchName: string;

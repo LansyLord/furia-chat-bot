@@ -9,7 +9,7 @@
                 <span class="user-icon">
                     <i class="fa" [class.fa-robot]="msg.isBot" [class.fa-user]="!msg.isBot"></i>
                 </span>
-                <p>{{msg.text}}</p>
+                <p [innerHTML]="msg.text"></p> <!-- Alterado para innerHTML -->
             </div>
         </div>
         <div class="card-footer">
