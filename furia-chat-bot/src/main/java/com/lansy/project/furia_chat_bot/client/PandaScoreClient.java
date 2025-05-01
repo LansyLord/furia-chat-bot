@@ -31,7 +31,7 @@ public class PandaScoreClient {
     }
 
     public JsonNode buscarPerfilJogadores() {
-        String url = "https://api.pandascore.co/csgo/players?filter[team_id]=124530&per_page=5&token=" + apiToken;
+        String url = "https://api.pandascore.co/csgo/teams?filter[id]=124530&token=" + apiToken;
         return restTemplate.getForObject(url, JsonNode.class);
     }
 
