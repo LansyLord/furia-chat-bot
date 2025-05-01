@@ -37,9 +37,9 @@ export class MainPageComponent {
   
   1️⃣ - Próxima partida agendada
   2️⃣ - Últimas 3 Partidas da FURIA
-  3️⃣ - Classificação atual no campeonato
-  4️⃣ - Jogadores do elenco principal
-  5️⃣ - Notícias recentes do time
+  3️⃣ - Jogadores do elenco principal
+  4️⃣ - 
+  5️⃣ - 
   
   Qualquer outro número: Menu de opções`,
       isBot: true,
