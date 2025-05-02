@@ -27,6 +27,33 @@ public class PlayerMapper {
 
             player.setId(playerNode.path("id").asInt(0));
             player.setNickname(playerNode.path("name").asText(""));
+
+            switch(player.getNickname()){
+                case "YEKINDAR":
+                        player.setRole("Entry Fragger");
+                        player.setSocialMedia("@yek1ndar");
+                        break;
+                case "FalleN":
+                    player.setRole("IGL | Rifler");
+                    player.setSocialMedia("@fallen");
+                    break;
+                case "yuurih":
+                    player.setRole("Rifler");
+                    player.setSocialMedia("@yuurihfps");
+                    break;
+                case "KSCERATO":
+                    player.setRole("Rifler");
+                    player.setSocialMedia("@kscerato");
+                    break;
+                case "molodoy":
+                    player.setRole("Awper");
+                    player.setSocialMedia("@danil.molodoy_");
+                    break;
+                default:
+                    player.setRole("Sem informações");
+                    player.setSocialMedia("Sem informações");
+            }
+
             player.setFirstName(playerNode.path("first_name").asText(""));
             player.setLastName(playerNode.path("last_name").asText(""));
             player.setFullName(player.getFirstName() + " '" + player.getNickname() + "' " + player.getLastName());

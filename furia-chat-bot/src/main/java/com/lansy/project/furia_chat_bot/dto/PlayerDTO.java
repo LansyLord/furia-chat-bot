@@ -3,9 +3,11 @@ package com.lansy.project.furia_chat_bot.dto;
 public class PlayerDTO {
     private int id;
     private String nickname;
+    private String role;
     private String firstName;
     private String lastName;
     private String fullName = firstName + " " + lastName;
+    private String socialMedia;
     private String nationality;
     private String birthday;
     private int age;
@@ -36,6 +38,14 @@ public class PlayerDTO {
         this.nickname = nickname;
     }
 
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+
     public String getFirstName() {
         return firstName;
     }
@@ -50,6 +60,14 @@ public class PlayerDTO {
 
     public void setLastName(String lastName) {
         this.lastName = lastName;
+    }
+
+    public String getSocialMedia() {
+        return socialMedia;
+    }
+
+    public void setSocialMedia(String socialMedia) {
+        this.socialMedia = socialMedia;
     }
 
     public String getNationality() {

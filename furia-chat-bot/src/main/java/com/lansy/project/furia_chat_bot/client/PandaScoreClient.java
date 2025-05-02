@@ -26,7 +26,7 @@ public class PandaScoreClient {
     }
 
     public JsonNode buscarProximosJogos() {
-        String url = "https://api.pandascore.co/csgo/matches/upcoming?filter[opponent_id]=130564&token=" + apiToken;
+        String url = "https://api.pandascore.co/csgo/matches/upcoming?filter[opponent_id]=124530&token=" + apiToken;
         return restTemplate.getForObject(url, JsonNode.class);
     }
 
