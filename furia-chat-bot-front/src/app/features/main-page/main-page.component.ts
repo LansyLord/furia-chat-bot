@@ -4,7 +4,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { ChatService } from '../../services/chat.service';
 import { Match } from '../../models/match';
 import { FutureMatch } from '../../models/future-match';
-import { Player } from '../../models/player'; // Importe a interface Player
+import { Player } from '../../models/player';
 import { firstValueFrom } from 'rxjs';
 
 interface ChatMessage {
@@ -13,9 +13,10 @@ interface ChatMessage {
   icon: string;
   isMatch?: boolean;
   matches?: Match[];
-  isPlayerList?: boolean; // Para identificar lista de jogadores
-  players?: Player[]; // Array de jogadores
-  isPlayerDetailPrompt?: boolean; // Para identificar prompt de detalhes
+  isPlayerList?: boolean;
+  players?: Player[];
+  isPlayerDetailPrompt?: boolean;
+  isContinuePrompt?: boolean;
 }
 
 @Component({
@@ -47,8 +48,8 @@ export class MainPageComponent {
     }
   ];
 
-  private currentPlayers: Player[] = []; // Armazena os jogadores atualmente listados
-  private awaitingPlayerSelection: boolean = false; // Flag para controle de estado
+  private currentPlayers: Player[] = [];
+  private currentState: 'mainMenu' | 'awaitingPlayerResponse' | 'awaitingPlayerNumber' | 'awaitingContinueResponse' = 'mainMenu';
 
   constructor(private chatService: ChatService) { }
 
@@ -60,13 +61,22 @@ export class MainPageComponent {
 
     if (!message) return;
 
-    // Adiciona mensagem do usuário
     this.addMessage(message, false, 'fa-user');
 
     try {
-      // Se estamos aguardando seleção de jogador
-      if (this.awaitingPlayerSelection) {
+      // Lidar com respostas de confirmação
+      if (this.currentState === 'awaitingContinueResponse') {
+        this.handleContinueResponse(message);
+        return;
+      }
+
+      if (this.currentState === 'awaitingPlayerResponse') {
         this.handlePlayerSelection(message);
+        return;
+      }
+
+      if (this.currentState === 'awaitingPlayerNumber') {
+        this.handlePlayerNumberSelection(message);
         return;
       }
 
@@ -75,12 +85,12 @@ export class MainPageComponent {
       let response: any;
 
       switch (message) {
-        case '1': // Próxima partida
+        case '1':
           const proximaPartida = await firstValueFrom(this.chatService.getProximasPartidas());
           response = { resposta: proximaPartida };
           break;
 
-        case '2': // Últimas partidas
+        case '2':
           const ultimasPartidas = await firstValueFrom(this.chatService.getUltimasPartidas());
           response = { resposta: ultimasPartidas };
           break;
@@ -90,30 +100,37 @@ export class MainPageComponent {
           response = { resposta: jogadores };
           break;
 
+        case 'menu':
+          this.showMainMenu();
+          break;
+
         default:
           this.addMessage('Opção inválida. Digite 1, 2 ou 3.', true, 'fa-robot');
           return;
       }
 
-      // Remove mensagem "Digitando..."
       this.messages = this.messages.filter(msg => msg !== thinkingMsg);
 
-      // Processa a resposta
       if (response?.resposta) {
         if (message === '1') {
           const formattedResponse = this.formatFutureMatches(response.resposta);
-          this.addMessage(formattedResponse, true, 'fa-robot');
+          if (formattedResponse === '') {
+            this.addMessage('Nenhuma partida da FURIA agendada no momento.', true, 'fa-robot');
+          } else {
+            this.addMessage(formattedResponse, true, 'fa-robot');
+          }
+          this.askToContinue();
         }
         else if (message === '2') {
           const formattedResponse = this.formatPastMatches(response.resposta);
           this.addMessage(formattedResponse, true, 'fa-robot');
+          this.askToContinue();
         }
         else if (message === '3') {
           this.currentPlayers = response.resposta;
           const formattedResponse = this.formatPlayers(response.resposta);
           this.addMessage(formattedResponse, true, 'fa-robot', true);
-
-          // Pergunta se quer ver detalhes
+          this.currentState = 'awaitingPlayerResponse';
           this.addPlayerDetailPrompt();
         }
       }
@@ -124,30 +141,102 @@ export class MainPageComponent {
     }
   }
 
-  private handlePlayerSelection(selection: string) {
-    const selectedNumber = parseInt(selection);
+  private askToContinue() {
+    this.currentState = 'awaitingContinueResponse';
+    this.addMessage(
+      'Posso ajudar em algo mais? (Responda "sim" ou "não")',
+      true,
+      'fa-robot',
+      false,
+      undefined,
+      false,
+      true
+    );
+  }
 
-    if (isNaN(selectedNumber) || selectedNumber < 1 || selectedNumber > this.currentPlayers.length) {
-      this.addMessage('Opção inválida. Por favor, digite um número correspondente a um jogador.', true, 'fa-robot');
-      this.addPlayerDetailPrompt(); // Mostra o prompt novamente
+  private handleContinueResponse(response: string) {
+    const lowerResponse = response.toLowerCase().trim();
+
+    if (lowerResponse !== 'sim' && lowerResponse !== 'não' && lowerResponse !== 'nao') {
+      this.addMessage('Por favor, responda "sim" ou "não".', true, 'fa-robot');
+      this.askToContinue();
       return;
     }
 
-    const selectedPlayer = this.currentPlayers[selectedNumber - 1];
-    this.showPlayerDetails(selectedPlayer);
-    this.awaitingPlayerSelection = false;
+    if (lowerResponse === 'sim') {
+      this.showMainMenu();
+    } else {
+      this.addMessage(
+        'Obrigado por conversar comigo! Se precisar de mais informações, é só digitar qualquer uma das opções disponíveis que eu volto a ativa! Se quiser ver o menu novamente digite `menu`. #FURIACS',
+        true,
+        'fa-robot'
+      );
+    }
+    this.currentState = 'mainMenu';
   }
 
   private addPlayerDetailPrompt() {
-    this.awaitingPlayerSelection = true;
     this.addMessage(
-      `Deseja ver detalhes sobre algum jogador? Digite o número correspondente (1 a ${this.currentPlayers.length}):`,
+      `Deseja ver detalhes sobre algum jogador? (Responda "sim" ou "não")`,
       true,
       'fa-robot',
       false,
       undefined,
       true
     );
+  }
+
+  private handlePlayerSelection(response: string) {
+    const lowerResponse = response.toLowerCase().trim();
+
+    if (lowerResponse !== 'sim' && lowerResponse !== 'não' && lowerResponse !== 'nao') {
+      this.addMessage('Por favor, responda "sim" ou "não".', true, 'fa-robot');
+      this.addPlayerDetailPrompt();
+      return;
+    }
+
+    if (lowerResponse === 'não' || lowerResponse === 'nao') {
+      this.addMessage('Ok, voltando ao menu principal.', true, 'fa-robot');
+      this.askToContinue();
+      return;
+    }
+
+    this.addMessage(
+      `Digite o número correspondente ao jogador (1 a ${this.currentPlayers.length}):`,
+      true,
+      'fa-robot'
+    );
+    this.currentState = 'awaitingPlayerNumber';
+  }
+
+  private handlePlayerNumberSelection(selection: string) {
+    const selectedNumber = parseInt(selection);
+
+    if (isNaN(selectedNumber) || selectedNumber < 1 || selectedNumber > this.currentPlayers.length) {
+      this.addMessage(`Por favor, digite um número entre 1 e ${this.currentPlayers.length}.`, true, 'fa-robot');
+      return;
+    }
+
+    const selectedPlayer = this.currentPlayers[selectedNumber - 1];
+    this.showPlayerDetails(selectedPlayer);
+    this.askToContinue();
+  }
+
+  private showMainMenu() {
+    this.addMessage(
+      `Digite um dos números abaixo para receber informações:
+      
+  1️⃣ - Próxima partida agendada
+  2️⃣ - Últimas 3 Partidas da FURIA
+  3️⃣ - Jogadores do elenco principal
+  4️⃣ - 
+  5️⃣ - 
+  
+  Qualquer outro número: Menu de opções`,
+      true,
+      'fa-robot'
+    );
+    this.currentState = 'mainMenu';
   }
 
   private showPlayerDetails(player: Player) {
@@ -212,7 +301,8 @@ export class MainPageComponent {
     icon: string,
     isPlayerList: boolean = false,
     players: Player[] = [],
-    isPlayerDetailPrompt: boolean = false
+    isPlayerDetailPrompt: boolean = false,
+    isContinuePrompt: boolean = false
   ): ChatMessage {
     const newMsg = {
       text,
@@ -220,7 +310,8 @@ export class MainPageComponent {
       icon,
       isPlayerList,
       players,
-      isPlayerDetailPrompt
+      isPlayerDetailPrompt,
+      isContinuePrompt
     };
     this.messages.push(newMsg);
     this.scrollToBottom();
