@@ -152,3 +152,8 @@
     border-radius: 8px;
     border: 3px solid #212f3d;
 }
+
+:host ::ng-deep .social-link {
+    text-decoration: none !important;
+    display: inline;
+}

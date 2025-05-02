@@ -39,7 +39,7 @@ export class MainPageComponent {
   1️⃣ - Próxima partida agendada
   2️⃣ - Últimas 3 Partidas da FURIA
   3️⃣ - Jogadores do elenco principal
-  4️⃣ - 
+  4️⃣ - História da FURIA
   5️⃣ - 
   
   Qualquer outro número: Menu de opções`,
@@ -96,8 +96,15 @@ export class MainPageComponent {
           break;
 
         case '3':
-          const jogadores = await firstValueFrom(this.chatService.getJogadores());
-          response = { resposta: jogadores };
+          const players = await firstValueFrom(this.chatService.getJogadores());
+          const activePlayers = this.filterInactivePlayers(players);
+          response = { resposta: activePlayers };
+          break;
+
+        case '4':
+          response = {
+            resposta: `A FURIA Esports é uma organização brasileira fundada em 2017, inicialmente focada em CS:GO. Criada por Jaime Pádua e André Akkari, a equipe se destacou pelo estilo agressivo de jogo e por sua disciplina fora do servidor. Com campanhas de sucesso internacionais desde 2019, se consolidou como uma das principais equipes do mundo. Hoje, a FURIA compete em diversos jogos e é uma das organizações mais respeitadas da América Latina.`
+          };
           break;
 
         case 'menu':
@@ -132,6 +139,10 @@ export class MainPageComponent {
           this.addMessage(formattedResponse, true, 'fa-robot', true);
           this.currentState = 'awaitingPlayerResponse';
           this.addPlayerDetailPrompt();
+        }
+        else if (message === '4') {
+          this.addMessage(response.resposta, true, 'fa-robot');
+          this.askToContinue();
         }
       }
 
@@ -213,13 +224,30 @@ export class MainPageComponent {
     const selectedNumber = parseInt(selection);
 
     if (isNaN(selectedNumber) || selectedNumber < 1 || selectedNumber > this.currentPlayers.length) {
-      this.addMessage(`Por favor, digite um número entre 1 e ${this.currentPlayers.length}.`, true, 'fa-robot');
+      this.addMessage(`Please enter a number between 1 and ${this.currentPlayers.length}.`, true, 'fa-robot');
       return;
     }
 
     const selectedPlayer = this.currentPlayers[selectedNumber - 1];
+
+    // Additional safety check
+    if (this.isInactivePlayer(selectedPlayer)) {
+      this.addMessage('This player is no longer on FURIA\'s main roster.', true, 'fa-robot');
+      return;
+    }
+
     this.showPlayerDetails(selectedPlayer);
     this.askToContinue();
+  }
+
+  private isInactivePlayer(player: Player): boolean {
+    const playersToRemove = ['chelo', 'skullz', 'guerri'];
+    const nickname = player.nickname?.toLowerCase();
+    const fullName = `${player.firstName?.toLowerCase()} ${player.lastName?.toLowerCase()}`;
+
+    return playersToRemove.some(
+      nameToRemove => nickname?.includes(nameToRemove) || fullName?.includes(nameToRemove)
+    );
   }
 
   private showMainMenu() {
@@ -229,7 +257,7 @@ export class MainPageComponent {
   1️⃣ - Próxima partida agendada
   2️⃣ - Últimas 3 Partidas da FURIA
   3️⃣ - Jogadores do elenco principal
-  4️⃣ - 
+  4️⃣ - História da FURIA
   5️⃣ - 
   
   Qualquer outro número: Menu de opções`,
@@ -242,10 +270,18 @@ export class MainPageComponent {
   private showPlayerDetails(player: Player) {
     const birthday = player.birthday ? new Date(player.birthday).toLocaleDateString('pt-BR') : 'Não informado';
     const age = player.age ? `${player.age} anos` : 'Não informado';
+    const instagramLink = player.socialMedia?.startsWith('@')
+      ? `<a href="https://instagram.com/${player.socialMedia.substring(1).trim()}" target="_blank"
+         class="social-link">
+         ${player.socialMedia}
+       </a>`
+      : player.socialMedia || 'Não informado';
 
     const details = `
       🎮 ${player.nickname}
       👤 Nome completo: ${player.fullName || player.firstName + ' ' + player.lastName}
+      🔫 Função em jogo: ${player.role}
+      📸 Instagram: ${instagramLink}
       🏳️ Nacionalidade: ${player.nationality || 'Não informada'}
       🎂 Data de nascimento: ${birthday}
       📅 Idade: ${age}
@@ -293,6 +329,20 @@ export class MainPageComponent {
       players.map((player, index) =>
         `${index + 1}️⃣ ${player.nickname || player.firstName} ${player.firstName ? `(${player.firstName} ${player.lastName})` : ''}`
       ).join('\n');
+  }
+
+  private filterInactivePlayers(players: Player[]): Player[] {
+
+    const playersToRemove = ['chelo', 'skullz', 'guerri'];
+    return players.filter(player => {
+
+      const nickname = player.nickname?.toLowerCase();
+      const fullName = `${player.firstName?.toLowerCase()} ${player.lastName?.toLowerCase()}`;
+
+      return !playersToRemove.some(
+        nameToRemove => nickname?.includes(nameToRemove) || fullName?.includes(nameToRemove)
+      );
+    });
   }
 
   private addMessage(
