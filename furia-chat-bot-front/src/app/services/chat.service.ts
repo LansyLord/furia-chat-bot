@@ -33,4 +33,8 @@ export class ChatService {
   getJogadores(): Observable<Player[]> {
     return this.http.get<Player[]>(`${this.apiUrl}/jogadores`);
   }
+
+  subscribeToNextMatchEmail(email: string) {
+    return this.http.post(`${this.apiUrl}/notificacoes/proxima-partida`, { email });
+  }
 }

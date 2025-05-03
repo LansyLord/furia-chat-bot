@@ -40,7 +40,7 @@ export class MainPageComponent {
   2️⃣ - Últimas 3 Partidas da FURIA
   3️⃣ - Jogadores do elenco principal
   4️⃣ - História da FURIA
-  5️⃣ - 
+  5️⃣ - Receber por e-mail a data e hora da próxima partida da FURIA
   
   Qualquer outro número: Menu de opções`,
       isBot: true,
@@ -49,7 +49,8 @@ export class MainPageComponent {
   ];
 
   private currentPlayers: Player[] = [];
-  private currentState: 'mainMenu' | 'awaitingPlayerResponse' | 'awaitingPlayerNumber' | 'awaitingContinueResponse' = 'mainMenu';
+  private currentState: 'mainMenu' | 'awaitingPlayerResponse' | 'awaitingPlayerNumber' | 'awaitingContinueResponse' | 'awaitingEmailForNextMatch' = 'mainMenu';
+
 
   constructor(private chatService: ChatService) { }
 
@@ -80,6 +81,27 @@ export class MainPageComponent {
         return;
       }
 
+      if (this.currentState === 'awaitingEmailForNextMatch') {
+        const email = message.toLowerCase().trim();
+        this.addMessage('Cadastrando Email...', true, 'fa-robot');
+        if (!this.isValidEmail(email)) {
+          this.addMessage('E-mail inválido. Por favor, digite um endereço de e-mail válido.', true, 'fa-robot');
+          return;
+        }
+
+        try {
+          await firstValueFrom(this.chatService.subscribeToNextMatchEmail(email));
+          this.addMessage(`✅ E-mail cadastrado com sucesso! Você será avisado quando a próxima partida da FURIA for marcada.`, true, 'fa-robot');
+        } catch (error) {
+          console.error(error);
+          this.addMessage('❌ Ocorreu um erro ao cadastrar seu e-mail. Tente novamente mais tarde.', true, 'fa-robot');
+        }
+
+        this.currentState = 'mainMenu';
+        this.askToContinue();
+        return;
+      }
+
       const thinkingMsg = this.addMessage('Digitando...', true, 'fa-robot');
 
       let response: any;
@@ -106,6 +128,12 @@ export class MainPageComponent {
             resposta: `A FURIA Esports é uma organização brasileira fundada em 2017, inicialmente focada em CS:GO. Criada por Jaime Pádua e André Akkari, a equipe se destacou pelo estilo agressivo de jogo e por sua disciplina fora do servidor. Com campanhas de sucesso internacionais desde 2019, se consolidou como uma das principais equipes do mundo. Hoje, a FURIA compete em diversos jogos e é uma das organizações mais respeitadas da América Latina.`
           };
           break;
+
+        case '5':
+          this.messages = this.messages.filter(msg => msg.text !== 'Digitando...');
+          this.addMessage('Digite seu e-mail para receber notificações da próxima partida da FURIA:', true, 'fa-robot');
+          this.currentState = 'awaitingEmailForNextMatch';
+          return;
 
         case 'menu':
           this.showMainMenu();
@@ -258,7 +286,7 @@ export class MainPageComponent {
   2️⃣ - Últimas 3 Partidas da FURIA
   3️⃣ - Jogadores do elenco principal
   4️⃣ - História da FURIA
-  5️⃣ - 
+  5️⃣ - Receber por e-mail a data e hora da próxima partida da FURIA
   
   Qualquer outro número: Menu de opções`,
       true,
@@ -373,4 +401,12 @@ export class MainPageComponent {
       this.cardBodyRef.nativeElement.scrollTop = this.cardBodyRef.nativeElement.scrollHeight;
     }, 100);
   }
+
+  private isValidEmail(email: string): boolean {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+  }
+
+
+
 }
