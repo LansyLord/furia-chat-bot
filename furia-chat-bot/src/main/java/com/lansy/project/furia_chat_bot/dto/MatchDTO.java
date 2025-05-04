@@ -3,6 +3,7 @@ package com.lansy.project.furia_chat_bot.dto;
 import java.util.List;
 
 public class MatchDTO {
+    private int id;
     private String leagueName;
     private String seriesName;
     private String matchName;
@@ -29,6 +30,9 @@ public class MatchDTO {
     }
 
     // Getters and setters
+
+    public int getId() {return id;}
+    public void setId(int id) {this.id = id;}
     public String getLeagueName() { return leagueName; }
     public void setLeagueName(String leagueName) { this.leagueName = leagueName; }
     public String getSeriesName() { return seriesName; }

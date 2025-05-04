@@ -13,6 +13,9 @@ public class MatchMapper {
     public MatchDTO toMatchDTO(JsonNode matchNode) {
         MatchDTO dto = new MatchDTO();
 
+        // Mapeando o ID da partida
+        dto.setId(matchNode.path("id").asInt());
+
         dto.setLeagueName(matchNode.path("league").path("name").asText());
         dto.setSeriesName(matchNode.path("serie").path("full_name").asText());
         dto.setMatchName(matchNode.path("name").asText());
@@ -60,5 +63,4 @@ public class MatchMapper {
         }
         return matches;
     }
-
 }
