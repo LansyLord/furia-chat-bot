@@ -13,9 +13,14 @@ public class SchedulingConfig {
     @Autowired
     private NotificationService notificationService;
 
-    // Verifica a cada hora (ajuste conforme necessário)
-    @Scheduled(fixedRate = 60000)
+    // Verifica a cada 2 horas
+    @Scheduled(fixedRate = 720000)
     public void verificarPartidasAgendadas() {
         notificationService.verificarEEnviarNotificacoes();
+    }
+
+    @Scheduled(fixedRate = 10800000) // Limpa e-mails expirados a cada 3 horas
+    public void limparEmailsExpirados() {
+        notificationService.removerEmailsExpirados();
     }
 }

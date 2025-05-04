@@ -6,6 +6,9 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -15,7 +18,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class NotificationService {
 
     private final Set<String> emailsInscritos = new HashSet<>();
-    private final Map<Integer, Set<String>> partidasNotificadas = new ConcurrentHashMap<>(); // Partida ID -> Emails que receberam
+    private final Map<Integer, Set<String>> partidasNotificadas = new ConcurrentHashMap<>();
+    private final Map<String, LocalDateTime> emailRegistrationTimes = new ConcurrentHashMap<>();
     private Integer ultimaPartidaNotificadaId = null;
 
     @Autowired
@@ -28,6 +32,32 @@ public class NotificationService {
         if (emailsInscritos.add(email)) { // Só continua se o email era novo
             notificarEmailRecemCadastrado(email);
         }
+    }
+
+    public void removerEmailsExpirados() {
+        LocalDateTime cutoffTime = LocalDateTime.now().minusHours(3);
+
+        emailRegistrationTimes.entrySet().removeIf(entry -> {
+            if (entry.getValue().isBefore(cutoffTime)) {
+                emailsInscritos.remove(entry.getKey());
+                return true;
+            }
+            return false;
+        });
+    }
+
+// Descadastramento manual via endpoint
+    public boolean descadastrarEmail(String email) {
+        boolean removed = emailsInscritos.remove(email);
+        if (removed) {
+            emailRegistrationTimes.remove(email);
+        }
+        System.out.println("Email " + email + " removido com sucesso!" );
+        return removed;
+    }
+
+    public boolean emailJaCadastrado(String email) {
+        return emailsInscritos.contains(email.toLowerCase());
     }
 
     private void notificarEmailRecemCadastrado(String novoEmail) {
@@ -144,11 +174,18 @@ public class NotificationService {
 
     private void enviarEmail(String destinatario, String assunto, String mensagem) {
         try {
+            String unsubscribeLink = "http://localhost:8080/unsubscribe?email="
+                    + URLEncoder.encode(destinatario, StandardCharsets.UTF_8);
+
+            String mensagemComUnsubscribe = mensagem +
+                    "\n\nPara descadastrar, clique aqui: " + unsubscribeLink;
+
             SimpleMailMessage email = new SimpleMailMessage();
             email.setFrom("noreply@furia-notifications.com");
             email.setTo(destinatario);
             email.setSubject(assunto);
             email.setText(mensagem);
+            email.setText(mensagemComUnsubscribe);
 
             mailSender.send(email);
             System.out.println("Email enviado para: " + destinatario);

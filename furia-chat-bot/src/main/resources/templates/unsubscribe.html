@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Descadastramento - FURIA Notificações</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        .success {
+            background-color: #dff0d8;
+            color: #3c763d;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .error {
+            background-color: #f2dede;
+            color: #a94442;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+        .logo {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="logo">
+    <img th:src="@{/images/furia-logo.png}" alt="Logo FURIA" style="width: 150px;">
+</div>
+
+<!-- Estado de carregamento (inicial) -->
+<div id="loadingState" class="loading">
+    <p>Processando seu descadastramento...</p>
+</div>
+
+<!-- Estado de sucesso (hidden inicialmente) -->
+<div id="successState" class="success" style="display: none;">
+    <h2>Descadastrado com sucesso!</h2>
+    <p>Seu e-mail <strong th:text="${email}"></strong> foi removido da nossa lista de notificações.</p>
+    <p>Você não receberá mais e-mails sobre os próximos jogos da FURIA.</p>
+    <p>Caso queira se cadastrar novamente, basta se inscrever no FURIA Chat Bot.</p>
+</div>
+
+<!-- Estado de erro (hidden inicialmente) -->
+<div id="errorState" class="error" style="display: none;">
+    <h2>Ocorreu um erro</h2>
+    <p>Não foi possível processar seu descadastramento.</p>
+    <p th:text="${errorMessage}"></p>
+    <p>Por favor, tente novamente mais tarde ou entre em contato com o suporte.</p>
+</div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    document.addEventListener('DOMContentLoaded', function() {
+        const email = /*[[${email}]]*/ '';
+
+        fetch('/api/v1/notificacoes/descadastrar', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email: email })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Erro na requisição');
+            }
+            return response.text();
+        })
+        .then(() => {
+            // Sucesso
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('successState').style.display = 'block';
+        })
+        .catch(error => {
+            // Erro
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('errorState').style.display = 'block';
+            console.error('Erro:', error);
+        });
+    });
+    /*]]>*/
+</script>
+</body>
+</html>
