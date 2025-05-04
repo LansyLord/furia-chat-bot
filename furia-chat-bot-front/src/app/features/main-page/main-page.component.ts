@@ -17,6 +17,7 @@ interface ChatMessage {
   players?: Player[];
   isPlayerDetailPrompt?: boolean;
   isContinuePrompt?: boolean;
+  isTypingIndicator: boolean;
 }
 
 @Component({
@@ -30,29 +31,15 @@ export class MainPageComponent {
   @ViewChild('inputChat') inputChatRef!: ElementRef<HTMLTextAreaElement>;
   @ViewChild('cardBody') cardBodyRef!: ElementRef<HTMLDivElement>;
 
-  messages: ChatMessage[] = [
-    {
-      text: `Fala, guerreiro(a)! Aqui é o contato inteligente da FURIA!
-  
-  Digite um dos números abaixo para receber informações:
-  
-  1️⃣ - Próxima partida agendada
-  2️⃣ - Últimas 3 Partidas da FURIA
-  3️⃣ - Jogadores do elenco principal
-  4️⃣ - História da FURIA
-  5️⃣ - Receber por e-mail a data e hora da próxima partida da FURIA
-  
-  Qualquer outro número: Menu de opções`,
-      isBot: true,
-      icon: 'fa-robot'
-    }
-  ];
+  messages: ChatMessage[] = []
 
   private currentPlayers: Player[] = [];
   private currentState: 'mainMenu' | 'awaitingPlayerResponse' | 'awaitingPlayerNumber' | 'awaitingContinueResponse' | 'awaitingEmailForNextMatch' = 'mainMenu';
 
 
   constructor(private chatService: ChatService) { }
+
+  showWelcome = true;
 
   async manageChat() {
     if (!this.inputChatRef?.nativeElement) return;
@@ -62,11 +49,18 @@ export class MainPageComponent {
 
     if (!message) return;
 
+    if (this.showWelcome) {
+      this.showWelcome = false;
+    }
+
     this.addMessage(message, false, 'fa-user');
 
+
     try {
-      // Lidar com respostas de confirmação
+
+
       if (this.currentState === 'awaitingContinueResponse') {
+        await this.showTypingIndicator();
         this.handleContinueResponse(message);
         return;
       }
@@ -78,6 +72,8 @@ export class MainPageComponent {
 
       if (this.currentState === 'awaitingPlayerNumber') {
         this.handlePlayerNumberSelection(message);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        this.scrollToBottom();
         return;
       }
 
@@ -102,49 +98,60 @@ export class MainPageComponent {
         return;
       }
 
-      const thinkingMsg = this.addMessage('Digitando...', true, 'fa-robot');
-
       let response: any;
 
       switch (message) {
         case '1':
+          await new Promise(resolve => setTimeout(resolve, 1500 / 2));
+          let typingMsg = this.addMessage('Digitando...', true, 'fa-robot');
+          await new Promise(resolve => setTimeout(resolve, 1500));
           const proximaPartida = await firstValueFrom(this.chatService.getProximasPartidas());
+          this.messages = this.messages.filter(msg => msg !== typingMsg);
           response = { resposta: proximaPartida };
           break;
 
         case '2':
+          await new Promise(resolve => setTimeout(resolve, 1500 / 2));
+          const typingMsg2 = this.addMessage('Digitando...', true, 'fa-robot');
+          await new Promise(resolve => setTimeout(resolve, 1500));
           const ultimasPartidas = await firstValueFrom(this.chatService.getUltimasPartidas());
+          this.messages = this.messages.filter(msg => msg !== typingMsg2);
           response = { resposta: ultimasPartidas };
           break;
 
         case '3':
+          await new Promise(resolve => setTimeout(resolve, 1500 / 2));
+          const typingMsg3 = this.addMessage('Digitando...', true, 'fa-robot');
+          await new Promise(resolve => setTimeout(resolve, 1500));
           const players = await firstValueFrom(this.chatService.getJogadores());
+          this.messages = this.messages.filter(msg => msg !== typingMsg3);
           const activePlayers = this.filterInactivePlayers(players);
           response = { resposta: activePlayers };
           break;
 
         case '4':
+          await this.showTypingIndicator();
           response = {
             resposta: `A FURIA Esports é uma organização brasileira fundada em 2017, inicialmente focada em CS:GO. Criada por Jaime Pádua e André Akkari, a equipe se destacou pelo estilo agressivo de jogo e por sua disciplina fora do servidor. Com campanhas de sucesso internacionais desde 2019, se consolidou como uma das principais equipes do mundo. Hoje, a FURIA compete em diversos jogos e é uma das organizações mais respeitadas da América Latina.`
           };
           break;
 
         case '5':
+          await this.showTypingIndicator();
           this.messages = this.messages.filter(msg => msg.text !== 'Digitando...');
           this.addMessage('Digite seu e-mail para receber notificações da próxima partida da FURIA:', true, 'fa-robot');
           this.currentState = 'awaitingEmailForNextMatch';
           return;
 
         case 'menu':
+          await this.showTypingIndicator();
           this.showMainMenu();
           break;
 
         default:
-          this.addMessage('Opção inválida. Digite 1, 2 ou 3.', true, 'fa-robot');
+          this.addMessage('Opção inválida. Digite um número de 1 a 5.', true, 'fa-robot');
           return;
       }
-
-      this.messages = this.messages.filter(msg => msg !== thinkingMsg);
 
       if (response?.resposta) {
         if (message === '1') {
@@ -236,7 +243,7 @@ export class MainPageComponent {
 
     if (lowerResponse === 'não' || lowerResponse === 'nao') {
       this.addMessage('Ok, voltando ao menu principal.', true, 'fa-robot');
-      this.askToContinue();
+      this.showMainMenu();
       return;
     }
 
@@ -282,27 +289,23 @@ export class MainPageComponent {
     this.addMessage(
       `Digite um dos números abaixo para receber informações:
       
-  1️⃣ - Próxima partida agendada
+  1️⃣ - Próxima partida da FURIA
   2️⃣ - Últimas 3 Partidas da FURIA
-  3️⃣ - Jogadores do elenco principal
+  3️⃣ - Equipe de Counter-Strike 2
   4️⃣ - História da FURIA
-  5️⃣ - Receber por e-mail a data e hora da próxima partida da FURIA
-  
-  Qualquer outro número: Menu de opções`,
+  5️⃣ - Casdastrar e-mail para receber próximas partidas`,
       true,
       'fa-robot'
     );
     this.currentState = 'mainMenu';
+    this.scrollToBottom();
   }
 
   private showPlayerDetails(player: Player) {
     const birthday = player.birthday ? new Date(player.birthday).toLocaleDateString('pt-BR') : 'Não informado';
     const age = player.age ? `${player.age} anos` : 'Não informado';
     const instagramLink = player.socialMedia?.startsWith('@')
-      ? `<a href="https://instagram.com/${player.socialMedia.substring(1).trim()}" target="_blank"
-         class="social-link">
-         ${player.socialMedia}
-       </a>`
+      ? `<a href="https://instagram.com/${player.socialMedia.substring(1).trim()}" target="_blank" class="social-link">${player.socialMedia}</a>`
       : player.socialMedia || 'Não informado';
 
     const details = `
@@ -373,6 +376,12 @@ export class MainPageComponent {
     });
   }
 
+  selectWelcomeOption(optionNumber: string) {
+    this.showWelcome = false;
+    this.inputChatRef.nativeElement.value = optionNumber;
+    this.manageChat();
+  }
+
   private addMessage(
     text: string,
     isBot: boolean,
@@ -380,7 +389,8 @@ export class MainPageComponent {
     isPlayerList: boolean = false,
     players: Player[] = [],
     isPlayerDetailPrompt: boolean = false,
-    isContinuePrompt: boolean = false
+    isContinuePrompt: boolean = false,
+    isTypingIndicator: boolean = false
   ): ChatMessage {
     const newMsg = {
       text,
@@ -389,24 +399,35 @@ export class MainPageComponent {
       isPlayerList,
       players,
       isPlayerDetailPrompt,
-      isContinuePrompt
+      isContinuePrompt,
+      isTypingIndicator
     };
     this.messages.push(newMsg);
-    this.scrollToBottom();
+    setTimeout(() => {
+      this.scrollToBottom();
+    }, 0);
     return newMsg;
+  }
+
+  private async showTypingIndicator(duration: number = 1000): Promise<void> {
+    await new Promise(resolve => setTimeout(resolve, duration / 2));
+    const typingMsg = this.addMessage('Digitando...', true, 'fa-robot');
+    await new Promise(resolve => setTimeout(resolve, duration));
+    this.messages = this.messages.filter(msg => msg !== typingMsg);
   }
 
   private scrollToBottom(): void {
     setTimeout(() => {
-      this.cardBodyRef.nativeElement.scrollTop = this.cardBodyRef.nativeElement.scrollHeight;
-    }, 100);
+      // Opção 1: Rolar a página inteira (window)
+      window.scrollTo({
+        top: document.body.scrollHeight,
+        behavior: 'smooth'
+      });
+    }, 25);
   }
 
   private isValidEmail(email: string): boolean {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return regex.test(email);
   }
-
-
-
 }
