@@ -1,23 +1,12 @@
 {
-    "version": 2,
     "builds": [
         {
-            "src": "dist/furia-chat-bot-front/server/main.server.mjs",
+            "src": "server.ts",
             "use": "@vercel/node",
             "config": {
                 "nodeVersion": "20.x",
-                "runtime": "nodejs20.x",
-                "includeFiles": [
-                    "dist/furia-chat-bot-front/browser/**",
-                    "dist/furia-chat-bot-front/server/**"
-                ]
+                "supportsESM": true
             }
-        }
-    ],
-    "routes": [
-        {
-            "src": "/(.*)",
-            "dest": "dist/furia-chat-bot-front/server/main.server.mjs"
         }
     ]
 }

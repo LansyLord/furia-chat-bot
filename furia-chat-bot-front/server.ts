@@ -1,56 +1,45 @@
+import 'zone.js/node';
 import { APP_BASE_HREF } from '@angular/common';
 import { CommonEngine } from '@angular/ssr';
 import express from 'express';
-import { fileURLToPath } from 'node:url';
-import { dirname, join, resolve } from 'node:path';
+import { existsSync } from 'fs';
+import { join } from 'path';
 import bootstrap from './src/main.server';
 
-// The Express app is exported so that it can be used by serverless Functions.
 export function app(): express.Express {
   const server = express();
-  const serverDistFolder = dirname(fileURLToPath(import.meta.url));
-  const browserDistFolder = resolve(serverDistFolder, '../browser');
-  const indexHtml = join(serverDistFolder, 'index.server.html');
+  const distFolder = join(process.cwd(), 'dist/furia-chat-bot-front/browser');
+  const indexHtml = existsSync(join(distFolder, 'index.original.html'))
+    ? 'index.original.html'
+    : 'index.html';
 
   const commonEngine = new CommonEngine();
 
   server.set('view engine', 'html');
-  server.set('views', browserDistFolder);
+  server.set('views', distFolder);
 
-  // Example Express Rest API endpoints
-  // server.get('/api/**', (req, res) => { });
-  // Serve static files from /browser
-  server.get('*.*', express.static(browserDistFolder, {
-    maxAge: '1y'
-  }));
+  // Servir arquivos estáticos
+  server.get('*.*', express.static(distFolder, { maxAge: '1y' }));
 
-  // All regular routes use the Angular engine
+  // SSR para rotas dinâmicas
   server.get('*', (req, res, next) => {
-    const { protocol, originalUrl, baseUrl, headers } = req;
-
-    commonEngine
-      .render({
-        bootstrap,
-        documentFilePath: indexHtml,
-        url: `${protocol}://${headers.host}${originalUrl}`,
-        publicPath: browserDistFolder,
-        providers: [{ provide: APP_BASE_HREF, useValue: baseUrl }],
-      })
-      .then((html) => res.send(html))
-      .catch((err) => next(err));
+    commonEngine.render({
+      bootstrap,
+      documentFilePath: join(distFolder, indexHtml),
+      url: req.url,
+      providers: [{ provide: APP_BASE_HREF, useValue: req.baseUrl }],
+    }).then((html) => res.send(html)).catch((err) => next(err));
   });
 
   return server;
 }
 
-function run(): void {
-  const port = process.env['PORT'] || 4000;
+// Para deploy no Vercel (compatível com ESM)
+export default app();
 
-  // Start up the Node server
-  const server = app();
-  server.listen(port, () => {
-    console.log(`Node Express server listening on http://localhost:${port}`);
+// Ou, se precisar de compatibilidade com testes locais:
+if (import.meta.url.endsWith(process.argv[1])) {
+  app().listen(process.env['PORT'] || 4000, () => {
+    console.log(`Server running on http://localhost:${process.env['PORT'] || 4000}`);
   });
 }
-
-run();
