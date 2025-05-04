@@ -259,7 +259,7 @@ export class MainPageComponent {
     const selectedNumber = parseInt(selection);
 
     if (isNaN(selectedNumber) || selectedNumber < 1 || selectedNumber > this.currentPlayers.length) {
-      this.addMessage(`Please enter a number between 1 and ${this.currentPlayers.length}.`, true, 'fa-robot');
+      this.addMessage(`Por favor, digite um número de 1 a ${this.currentPlayers.length}.`, true, 'fa-robot');
       return;
     }
 
