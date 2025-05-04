@@ -2,17 +2,18 @@
     "version": 2,
     "builds": [
         {
-            "src": "furia-chat-bot-front/angular.json",
-            "use": "@vercel/builders",
-            "config": {
-                "dist": "furia-chat-bot-front/dist/furia-chat-bot-front/browser"
-            }
+            "src": "dist/furia-chat-bot-front/server/main.js",
+            "use": "@vercel/node"
+        },
+        {
+            "src": "dist/furia-chat-bot-front/browser/**",
+            "use": "@vercel/static"
         }
     ],
     "routes": [
         {
             "src": "/(.*)",
-            "dest": "/index.html"
+            "dest": "/server/main.js"
         }
     ]
 }
