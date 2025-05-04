@@ -79,18 +79,27 @@ export class MainPageComponent {
 
       if (this.currentState === 'awaitingEmailForNextMatch') {
         const email = message.toLowerCase().trim();
-        this.addMessage('Cadastrando Email...', true, 'fa-robot');
+        this.addMessage('Verificando e-mail...', true, 'fa-robot');
+
         if (!this.isValidEmail(email)) {
-          this.addMessage('E-mail inválido. Por favor, digite um endereço de e-mail válido.', true, 'fa-robot');
+          this.addMessage('❌ E-mail inválido. Por favor, digite um endereço de e-mail válido.', true, 'fa-robot');
           return;
         }
 
         try {
-          await firstValueFrom(this.chatService.subscribeToNextMatchEmail(email));
-          this.addMessage(`✅ E-mail cadastrado com sucesso! Você será avisado quando a próxima partida da FURIA for marcada.`, true, 'fa-robot');
+          // Primeiro verifica se o e-mail já existe
+          const emailExists = await firstValueFrom(this.chatService.checkEmailExists(email));
+
+          if (emailExists) {
+            this.addMessage('ℹ️ Este e-mail já está cadastrado! Você receberá notificações quando houver novas partidas.', true, 'fa-robot');
+          } else {
+            // Se não existe, faz o cadastro
+            await firstValueFrom(this.chatService.subscribeToNextMatchEmail(email));
+            this.addMessage(`✅ E-mail cadastrado com sucesso! Você será avisado quando a próxima partida da FURIA for marcada.`, true, 'fa-robot');
+          }
         } catch (error) {
           console.error(error);
-          this.addMessage('❌ Ocorreu um erro ao cadastrar seu e-mail. Tente novamente mais tarde.', true, 'fa-robot');
+          this.addMessage('❌ Ocorreu um erro ao verificar/cadastrar seu e-mail. Tente novamente mais tarde.', true, 'fa-robot');
         }
 
         this.currentState = 'mainMenu';

@@ -37,4 +37,8 @@ export class ChatService {
   subscribeToNextMatchEmail(email: string) {
     return this.http.post(`${this.apiUrl}/notificacoes/proxima-partida`, { email });
   }
+
+  checkEmailExists(email: string): Observable<boolean> {
+    return this.http.get<boolean>(`${this.apiUrl}/check-email?email=${encodeURIComponent(email)}`);
+  }
 }
