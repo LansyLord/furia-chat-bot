@@ -2,6 +2,7 @@
 Aplicação full-stack desenvolvida para oferecer aos fãs da FURIA Esports notificações por e-mail sobre próximas partidas, além de acesso a dados sobre jogadores e confrontos da equipe via integração com a API da PandaScore.
 
 📌 Funcionalidades
+
 🔧 Back-end (Spring Boot)
 Cadastro de e-mails para receber notificações de novas partidas.
 
@@ -29,9 +30,6 @@ Página com informações dos jogadores.
 Interface moderna, responsiva e com foco na experiência do torcedor.
 
 🗂 Estrutura do Projeto
-swift
-Copiar
-Editar
 furia-chat-bot/
 ├── backend/
 │   ├── src/main/java/com/lansy/project/furia_chat_bot/
@@ -46,6 +44,8 @@ furia-chat-bot/
 ├── frontend/
 │   └── (projeto Angular)
 └── README.md
+
+
 🚀 Como Executar Localmente
 📦 Pré-requisitos
 Java 17+
@@ -63,9 +63,6 @@ Chave da API PandaScore
 🧪 Backend (Spring Boot)
 Configure o arquivo application.properties:
 
-properties
-Copiar
-Editar
 # Email
 spring.mail.host=smtp.gmail.com
 spring.mail.port=587
@@ -79,9 +76,6 @@ pandascore.api.token=SUA_CHAVE_API
 pandascore.base.url=https://api.pandascore.co
 Execute a aplicação:
 
-bash
-Copiar
-Editar
 cd backend
 ./mvnw spring-boot:run
 Endpoints disponíveis:
@@ -98,22 +92,15 @@ GET	/api/v1/partidas/ultimas	Últimas 3 partidas da FURIA
 🌐 Front-end (Angular)
 Instale dependências e inicie o projeto:
 
-bash
-Copiar
-Editar
+
 cd frontend
 npm install
 ng serve
 Acesse o app:
 
-arduino
-Copiar
-Editar
 http://localhost:4200
-📬 Exemplo de E-mail Enviado
-bash
-Copiar
-Editar
+📬 Exemplo de E-mail Enviado:
+
 🏆 ESL Pro League - Group Stage
 
 🔥 FURIA vs G2 🔥
@@ -130,11 +117,10 @@ Editar
 🔔 Você está recebendo esta notificação porque se inscreveu no FURIA Chat Bot.
 Descadastre-se clicando aqui: http://localhost:8080/unsubscribe?email=...
 ⏰ Cron Job Sugerido (verificação automática)
+
 Para envio automático de notificações sobre novas partidas, crie um agendador (@Scheduled) ou configure um cron externo chamando:
 
-java
-Copiar
-Editar
+
 notificationService.verificarEEnviarNotificacoes();
 🧠 Tecnologias Utilizadas
 Spring Boot: REST API, agendamento, envio de e-mail.
