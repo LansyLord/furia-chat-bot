@@ -4,7 +4,7 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build --output-path dist/furia-chat-bot-front",
+    "build": "ng build --configuration=production",
     "preview": "npm run build && serve -s dist/furia-chat-bot-front/browser",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
